@@ -210,23 +210,6 @@ ENDIF(NOT MSVC)
 SET(sword_zlib_used_SOURCES
 	src/modules/common/zipcomprs.cpp
 )
-SET(sword_zlib_nofound_SOURCES
-	src/utilfuns/zlib/adler32.c
-	src/utilfuns/zlib/compress.c
-	src/utilfuns/zlib/crc32.c
-	src/utilfuns/zlib/deflate.c
-	src/utilfuns/zlib/gzclose.c
-	src/utilfuns/zlib/gzlib.c
-	src/utilfuns/zlib/gzread.c
-	src/utilfuns/zlib/gzwrite.c
-	src/utilfuns/zlib/infback.c
-	src/utilfuns/zlib/inftrees.c
-	src/utilfuns/zlib/inflate.c
-	src/utilfuns/zlib/inffast.c
-	src/utilfuns/zlib/trees.c
-	src/utilfuns/zlib/uncompr.c
-	src/utilfuns/zlib/zutil.c
-)
 
 # Sources relying on bzip2 (libbz2)
 SET(sword_bzip2_used_SOURCES
