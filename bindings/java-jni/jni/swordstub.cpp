@@ -60,6 +60,7 @@ using namespace sword;
 
 namespace {
 bool firstInit = true;
+bool firstInstallInit = true;
 JavaVM *javaVM = nullptr;
 WebMgr *mgr = nullptr;
 InstallMgr *installMgr = nullptr;
@@ -71,9 +72,13 @@ jobject bibleSyncListener = nullptr;
 JNIEnv *bibleSyncListenerEnv = nullptr;
 #endif
 SWBuf STORAGE_BASE;
-const char *SDCARD_PATH = "/sdcard/sword";
+const char *OLD_SDCARD_PATH = "/sdcard/sword";
+const char *SDCARD_PATH = "/sdcard/Documents/sword";
 const char *AND_BIBLE_MODULES_PATH = "/sdcard/Android/data/net.bible.android.activity/files";
 //ANativeActivity *_activity;
+
+typedef map<SWBuf, SWBuf> SearchFilterValuesType;
+SearchFilterValuesType searchFilterValues;
 
 // this method converts a UTF8 encoded SWBuf to a Java String, avoiding a bug in jni NewStringUTF
 jstring strToUTF8Java(JNIEnv *env, const SWBuf &str) {
@@ -212,17 +217,22 @@ protected:
 static void init(JNIEnv *env) {
 
 	if (firstInit) {
+
+		searchFilterValues.insert(SearchFilterValuesType::value_type("Greek Accents", "Off"));
+		searchFilterValues.insert(SearchFilterValuesType::value_type("Strong's Numbers", "Off"));
+		searchFilterValues.insert(SearchFilterValuesType::value_type("Hebrew Vowel Points", "Off"));
+		searchFilterValues.insert(SearchFilterValuesType::value_type("Headings", "On"));
+
 		SWLog::setSystemLog(new AndroidLogger());
 		SWLog::getSystemLog()->setLogLevel(SWLog::LOG_DEBUG);
 		StringMgr::setSystemStringMgr(new AndroidStringMgr());
-		firstInit = false;
 	}
 	if (!mgr) {
 SWLOGD("libsword: init() begin");
 		SWBuf baseDir  = SDCARD_PATH;
 		SWBuf confPath = baseDir + "/mods.d/globals.conf";
 		// be sure we have at least some config file already out there
-		if (!FileMgr::existsFile(confPath.c_str())) {
+		if (!FileMgr::existsFile(confPath.c_str()) && firstInit) {
 SWLOGD("libsword: init() sword config not found, attempting to create parent of: %s", confPath.c_str());
 			FileMgr::createParent(confPath.c_str());
 			remove(confPath.c_str());
@@ -233,16 +243,30 @@ SWLOGD("libsword: init() saving basic: %s", confPath.c_str());
 			config.save();
 		}
 		if (!FileMgr::existsFile(confPath.c_str())) {
+			baseDir = OLD_SDCARD_PATH;
+			confPath = baseDir + "/mods.d/globals.conf";
+			SWLOGD("libsword: init() sword config STILL not found, switching to STORAGE_PATH (parent of): %s", confPath.c_str());
+			if (!FileMgr::existsFile(confPath.c_str()) && firstInit) {
+				FileMgr::createParent(confPath.c_str());
+				remove(confPath.c_str());
+				SWLOGD("libsword: init() saving basic: %s", confPath.c_str());
+				SWConfig config(confPath.c_str());
+				config["Globals"]["HiAndroid"] = "weeee";
+				config.save();
+			}
+		}
+		if (!FileMgr::existsFile(confPath.c_str())) {
 			baseDir = STORAGE_BASE;
 			confPath = baseDir + "/mods.d/globals.conf";
-SWLOGD("libsword: init() sword config STILL not found, attempting to create parent of: %s", confPath.c_str());
-			FileMgr::createParent(confPath.c_str());
-			remove(confPath.c_str());
-
+SWLOGD("libsword: init() sword config STILL not found, switching to STORAGE_PATH (parent of): %s", confPath.c_str());
+			if (!FileMgr::existsFile(confPath.c_str()) && firstInit) {
+				FileMgr::createParent(confPath.c_str());
+				remove(confPath.c_str());
 SWLOGD("libsword: init() saving basic: %s", confPath.c_str());
-			SWConfig config(confPath.c_str());
-			config["Globals"]["HiAndroid"] = "weeee";
-			config.save();
+				SWConfig config(confPath.c_str());
+				config["Globals"]["HiAndroid"] = "weeee";
+				config.save();
+			}
 		}
 		confPath = STORAGE_BASE + "/extraConfig.conf";
 		bool exists = FileMgr::existsFile(confPath.c_str());
@@ -262,8 +286,12 @@ SWLOGD("libsword: init() augmenting modules from: %s", AND_BIBLE_MODULES_PATH);
 		mgr->augmentModules(AND_BIBLE_MODULES_PATH, true);
 		// if our basedir isn't the sdcard, let's augment the sdcard
 		if (strcmp(baseDir.c_str(), SDCARD_PATH)) { // NOLINT(bugprone-suspicious-string-compare)
-SWLOGD("libsword: init() augmenting modules from: %s", SDCARD_PATH);
+			SWLOGD("libsword: init() augmenting modules from: %s", SDCARD_PATH);
 			mgr->augmentModules(SDCARD_PATH, true);
+		}
+		if (strcmp(baseDir.c_str(), OLD_SDCARD_PATH)) { // NOLINT(bugprone-suspicious-string-compare)
+SWLOGD("libsword: init() augmenting modules from: %s", OLD_SDCARD_PATH);
+			mgr->augmentModules(OLD_SDCARD_PATH, true);
 		}
 		// if our basedir isn't the private storage base, let's augment the private
 		// storage base in case a previous version of the app stored modules there.
@@ -276,11 +304,14 @@ SWLOGD("libsword: init() adding locales from baseDir.");
 		LocaleMgr::getSystemLocaleMgr()->loadConfigDir(SWBuf(STORAGE_BASE + "/uilocales.d").c_str());
 		LocaleMgr::getSystemLocaleMgr()->loadConfigDir((SWBuf(SDCARD_PATH) + "/locales.d").c_str());
 		LocaleMgr::getSystemLocaleMgr()->loadConfigDir((SWBuf(SDCARD_PATH) + "/uilocales.d").c_str());
+		LocaleMgr::getSystemLocaleMgr()->loadConfigDir((SWBuf(OLD_SDCARD_PATH) + "/locales.d").c_str());
+		LocaleMgr::getSystemLocaleMgr()->loadConfigDir((SWBuf(OLD_SDCARD_PATH) + "/uilocales.d").c_str());
 
 		mgr->setGlobalOption("Footnotes", "On");
 		mgr->setGlobalOption("Cross-references", "On");
 SWLOGD("libsword: init() end.");
 	}
+	firstInit = false;
 }
 
 void initInstall(JNIEnv *env, jobject progressReporter = nullptr) {
@@ -296,7 +327,7 @@ SWLOGD("initInstall: installMgr is null");
 		SWBuf confPath = baseDir + "/InstallMgr.conf";
 		// be sure we have at least some config file already out there
 SWLOGD("initInstall: confPath: %s", confPath.c_str());
-		if (!FileMgr::existsFile(confPath.c_str())) {
+		if (!FileMgr::existsFile(confPath.c_str()) && firstInstallInit) {
 SWLOGD("initInstall: file doesn't exist: %s", confPath.c_str());
 			FileMgr::createParent(confPath.c_str());
 			SWConfig config(confPath.c_str());
@@ -304,18 +335,32 @@ SWLOGD("initInstall: file doesn't exist: %s", confPath.c_str());
 			config.save();
 		}
 		if (!FileMgr::existsFile(confPath.c_str())) {
+			baseDir = OLD_SDCARD_PATH;
+			confPath = baseDir + "/InstallMgr.conf";
+			if (!FileMgr::existsFile(confPath.c_str()) && firstInstallInit) {
+				SWLOGD("initInstall: file STILL doesn't exist, switching to STORAGE_BASE (parent of): %s", confPath.c_str());
+				FileMgr::createParent(confPath.c_str());
+				SWConfig config(confPath.c_str());
+				config["General"]["PassiveFTP"] = "true";
+				config.save();
+			}
+		}
+		if (!FileMgr::existsFile(confPath.c_str())) {
 			baseDir = STORAGE_BASE;
 			confPath = baseDir + "/InstallMgr.conf";
-SWLOGD("initInstall: file STILL doesn't exist, attempting to create parent of: %s", confPath.c_str());
-			FileMgr::createParent(confPath.c_str());
-			SWConfig config(confPath.c_str());
-			config["General"]["PassiveFTP"] = "true";
-			config.save();
+			if (!FileMgr::existsFile(confPath.c_str()) && firstInstallInit) {
+SWLOGD("initInstall: file STILL doesn't exist, switching to STORAGE_BASE (parent of): %s", confPath.c_str());
+				FileMgr::createParent(confPath.c_str());
+				SWConfig config(confPath.c_str());
+				config["General"]["PassiveFTP"] = "true";
+				config.save();
+			}
 		}
 		installMgr = new InstallMgr(baseDir, installStatusReporter);
 		if (disclaimerConfirmed) installMgr->setUserDisclaimerConfirmed(true);
 SWLOGD("initInstall: instantiated InstallMgr with baseDir: %s", baseDir.c_str());
 	}
+	firstInstallInit = false;
 }
 
 #ifdef BIBLESYNC
@@ -1792,7 +1837,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_crosswire_android_sword_SWModule_search
 	pu *peeuuu = new pu(env, progressReporter);
 
 	if (module) {
-		ListKey lscope;
+		ListKey *lscope = nullptr;
+		ListKey localScope;
 		ListKey result;
 
 		if ((scope) && (strlen(scope)) > 0) {
@@ -1803,11 +1849,26 @@ JNIEXPORT jobjectArray JNICALL Java_org_crosswire_android_sword_SWModule_search
 				parser = new VerseKey();
 			}
 			*parser = module->getKeyText();
-			lscope = parser->parseVerseList(scope, *parser, true);
-			result = module->search(expression, srchType, flags, &lscope, nullptr, &percentUpdate, peeuuu);
+			localScope = parser->parseVerseList(scope, *parser, true);
+			lscope = &localScope;
 			delete parser;
 		}
-		else	result = module->search(expression, srchType, flags, nullptr, nullptr, &percentUpdate, peeuuu);
+
+		// setup our option filters for strip mode; TODO: this sucks.  We need a second occurrence these filters set to their strip values
+		SearchFilterValuesType currentFilterValues;
+		for (SearchFilterValuesType::const_iterator it = searchFilterValues.begin(); it != searchFilterValues.end(); ++it) {
+			currentFilterValues.insert(SearchFilterValuesType::value_type(it->first, mgr->getGlobalOption(it->first)));
+		}
+		for (SearchFilterValuesType::const_iterator it = searchFilterValues.begin(); it != searchFilterValues.end(); ++it) {
+			mgr->setGlobalOption(it->first, it->second);
+		}
+
+        SWBuf searchTerm = module->stripText(expression);
+        result = module->search(searchTerm.c_str(), srchType, flags, lscope, nullptr, &percentUpdate, peeuuu);
+
+		for (SearchFilterValuesType::const_iterator it = currentFilterValues.begin(); it != currentFilterValues.end(); ++it) {
+			mgr->setGlobalOption(it->first, it->second);
+		}
 
 		delete peeuuu;
 

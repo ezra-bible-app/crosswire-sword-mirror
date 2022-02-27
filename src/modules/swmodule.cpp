@@ -775,7 +775,7 @@ ListKey &SWModule::search(const char *istr, int searchType, int flags, SWKey *sc
 					do {
 						if (stripped||specialStrips||multiVerse) {
 							testBuf = multiVerse ? lastBuf + ' ' + textBuf : textBuf;
-							if (stripped) testBuf = stripText(testBuf);
+							if (stripped||specialStrips) testBuf = stripText(testBuf);
 						}
 						else testBuf.setSize(0);
 						foundWords = 0;
@@ -1002,10 +1002,8 @@ ListKey &SWModule::search(const char *istr, int searchType, int flags, SWKey *sc
  * RET: this module's text at current key location massaged by Strip filters
  */
 
-const char *SWModule::stripText(const char *buf, int len) {
-	static SWBuf local;
-	local = renderText(buf, len, false);
-	return local.c_str();
+SWBuf SWModule::stripText(const char *buf, int len) {
+	return renderText(buf, len, false);
 }
 
 
@@ -1101,7 +1099,7 @@ SWBuf SWModule::renderText(const char *buf, int len, bool render) const {
 
 SWBuf SWModule::renderText(const SWKey *tmpKey) {
 	SWKey *saveKey;
-	const char *retVal;
+	SWBuf retVal;
 
 	if (!key->isPersist()) {
 		saveKey = createKey();
@@ -1130,9 +1128,9 @@ SWBuf SWModule::renderText(const SWKey *tmpKey) {
  * RET: this module's text at specified key location massaged by Strip filters
  */
 
-const char *SWModule::stripText(const SWKey *tmpKey) {
+SWBuf SWModule::stripText(const SWKey *tmpKey) {
 	SWKey *saveKey;
-	const char *retVal;
+	SWBuf retVal;
 
 	if (!key->isPersist()) {
 		saveKey = createKey();
@@ -1333,7 +1331,8 @@ signed char SWModule::createSearchFramework(void (*percent)(char, void *), void 
 		}
 
 		// get "content" field
-		const char *content = stripText();
+		SWBuf contentBuf = stripText();
+		const char *content = contentBuf;
 
 		bool good = false;
 
@@ -1436,7 +1435,8 @@ signed char SWModule::createSearchFramework(void (*percent)(char, void *), void 
 //printf("building proxBuf from (%s).\nproxBuf.c_str(): %s\n", (const char *)*key, proxBuf.c_str());
 //printf("building proxBuf from (%s).\n", (const char *)*key);
 
-					content = stripText();
+					contentBuf = stripText();
+					content = contentBuf.c_str();
 					if (content && *content) {
 						// build "strong" field
 						strong = "";
@@ -1501,7 +1501,8 @@ signed char SWModule::createSearchFramework(void (*percent)(char, void *), void 
 //printf("building proxBuf from (%s).\n", (const char *)*key);
 //fflush(stdout);
 
-						content = stripText();
+						contentBuf = stripText();
+						content = contentBuf.c_str();
 						if (content && *content) {
 							// build "strong" field
 							strong = "";
