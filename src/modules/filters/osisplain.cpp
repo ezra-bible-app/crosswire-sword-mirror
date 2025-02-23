@@ -218,12 +218,14 @@ bool OSISPlain::handleToken(SWBuf &buf, const char *token, BasicFilterUserData *
 			userData->supressAdjacentWhitespace = true;
 			buf.append('\n');
 		}
+    /* This code causes a bug in the search function, so it is commented out for now
+  
 		else if (!strncmp(token, "/divineName", 11)) {
 			// Get the end portion of the string, and upper case it
 			char* end = buf.getRawData();
 			end += buf.size() - u->lastTextNode.size();
 			toupperstr(end);
-		}
+		} */
 		else if (!strncmp(token, "hi", 2)) {
 
 				// handle both OSIS 'type' and TEI 'rend' attributes
