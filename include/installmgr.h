@@ -59,6 +59,9 @@ public:
 	void *userData;
 	SWMgr *getMgr();
 	void flush();
+
+	InstallSource *chainedSource;
+	bool packagePreference;
 };
 
 /** A standard map of remote install sources.
@@ -78,6 +81,7 @@ protected:
 	long timeoutMillis;
 	SWBuf u, p;
 	bool unverifiedPeerAllowed;
+	bool forgetInstallSource;
 
 	/** override this method and provide your own custom RemoteTransport subclass
 	 */
@@ -131,20 +135,36 @@ public:
 	void clearSources();
 
 	/** call to delete all files of a locally installed module.
+	 * @manager - a manager with primary root pointing to where the module is located
+	 * @modName - the name of the module to remove
 	 */
 	virtual int removeModule(SWMgr *manager, const char *modName);
 
 	/** mostly an internally used method to remote download from a remote source
 	 * to a local destination
+	 * @is - remote installation source from which to copy
+	 * @src - path to resource on remote source
+	 * @dest - path to local destination
+	 * @dirTransfer - whether or not the resource to be copies is a folder
+	 * @suffix - a resource suffix filter to limit resources copied if {dirTransfer} is true, e.g., ".conf"
 	 */
 	virtual int remoteCopy(InstallSource *is, const char *src, const char *dest, bool dirTransfer = false, const char *suffix = "");
 
 	/** call to install a module from a local path (fromLocation) or remote InstallSource (is) (leave the other 0)
+	 * @destMgr - a manager with primary root pointing to where module should be installed
+	 * @fromLocation - install from a local root folder path (null if installing remotely)
+	 * @modName - name of module to install
+	 * @is - remote installation source from which to install (null if installing locally)
+	 *
+	 * @return error status; 0 = OK; -9 = user aborted; see copyFile and copyDir for other error return codes
 	 */
 	virtual int installModule(SWMgr *destMgr, const char *fromLocation, const char *modName, InstallSource *is = 0);
 
 
-	/** call to obtain and locally cache the available content list of the remote source
+	/** call to obtain and locally cache the available content list of the remote source.
+	 * This must be called before the remote source can be used. 
+	 * This can be called again to refresh the remote source information from the remote source,
+	 * i.e., to see new and updated modules
 	 */
 	virtual int refreshRemoteSource(InstallSource *is);
 
@@ -270,7 +290,9 @@ public:
 	long getTimeoutMillis() { return timeoutMillis; }
 
 	void setUnverifiedPeerAllowed(bool allowed) { this->unverifiedPeerAllowed = allowed; }
+	void setForgetInstallSource(bool forget) { this->forgetInstallSource = forget; }
 	bool isUnverifiedPeerAllowed() { return unverifiedPeerAllowed; }
+	bool isForgetInstallSource() { return forgetInstallSource; }
 
 	/** Request nicely to terminate an ongoing transfer.
 	 * If threading is a concern, consider calling terminate() from your status reporters
