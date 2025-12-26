@@ -34,7 +34,7 @@
 #include <errno.h>
 #include <ctype.h>
 
-#if defined(__unix__)
+#if defined(__unix__) || defined(__APPLE__)
 
 #include <sys/types.h>
 #include <unistd.h>
