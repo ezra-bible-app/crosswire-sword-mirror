@@ -70,7 +70,7 @@ VersificationMgr *VersificationMgr::getSystemVersificationMgr() {
 		systemVersificationMgr->registerVersificationSystem("Synodal", otbooks_synodal, ntbooks_synodal, vm_synodal, mappings_synodal);
 		systemVersificationMgr->registerVersificationSystem("SynodalProt", otbooks_synodalProt, ntbooks_synodal, vm_synodalProt);
 		systemVersificationMgr->registerVersificationSystem("Vulg", otbooks_vulg, ntbooks_vulg, vm_vulg, mappings_vulg);
-		systemVersificationMgr->registerVersificationSystem("German", otbooks_german, ntbooks, vm_german);
+		systemVersificationMgr->registerVersificationSystem("German", otbooks_german, ntbooks, vm_german, mappings_german);
 		systemVersificationMgr->registerVersificationSystem("Luther", otbooks_luther, ntbooks_luther, vm_luther);
 		systemVersificationMgr->registerVersificationSystem("Catholic", otbooks_catholic, ntbooks, vm_catholic);
 		systemVersificationMgr->registerVersificationSystem("Catholic2", otbooks_catholic2, ntbooks, vm_catholic2);

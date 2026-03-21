@@ -303,6 +303,95 @@ int vm_german[] = {
   27, 21
 };
 
+// Mapping rules for German versification differences relative to KJVA.
+//
+// Data format (same layout used by other canon_* mappings tables):
+//   - Optional extra-book names as NUL-terminated strings.
+//   - A single 0 byte separator.
+//   - Mapping records (normally 7 bytes each), then a final 0 byte terminator.
+//
+// 7-byte mapping record:
+//   [0] target book id (1-based, in destination system)
+//   [1] target chapter
+//   [2] target verse start
+//   [3] target verse end (0 means single verse)
+//   [4] KJVA chapter
+//   [5] KJVA verse start
+//   [6] KJVA verse end (0 means single verse)
+//
+// For Psalms superscriptions, German often counts the heading as verse 1,
+// while KJVA/KJV treat it as a heading (verse 0 / not counted in displayed verse
+// numbering). These rules encode that shift so KJV<->German mapping is explicit.
+unsigned char mappings_german[] = {
+    0,
+    19,  3,   2,   0,   3,   1,   0,
+    19,  4,   2,   0,   4,   1,   0,
+    19,  5,   2,   0,   5,   1,   0,
+    19,  6,   2,   0,   6,   1,   0,
+    19,  7,   2,   0,   7,   1,   0,
+    19,  8,   2,   0,   8,   1,   0,
+    19,  9,   2,   0,   9,   1,   0,
+    19,  12,  2,   0,   12,  1,   0,
+    19,  18,  2,   0,   18,  1,   0,
+    19,  19,  2,   0,   19,  1,   0,
+    19,  20,  2,   0,   20,  1,   0,
+    19,  21,  2,   0,   21,  1,   0,
+    19,  22,  2,   0,   22,  1,   0,
+    19,  30,  2,   0,   30,  1,   0,
+    19,  31,  2,   0,   31,  1,   0,
+    19,  34,  2,   0,   34,  1,   0,
+    19,  36,  2,   0,   36,  1,   0,
+    19,  38,  2,   0,   38,  1,   0,
+    19,  39,  2,   0,   39,  1,   0,
+    19,  40,  2,   0,   40,  1,   0,
+    19,  41,  2,   0,   41,  1,   0,
+    19,  42,  2,   0,   42,  1,   0,
+    19,  44,  2,   0,   44,  1,   0,
+    19,  45,  2,   0,   45,  1,   0,
+    19,  46,  2,   0,   46,  1,   0,
+    19,  47,  2,   0,   47,  1,   0,
+    19,  48,  2,   0,   48,  1,   0,
+    19,  49,  2,   0,   49,  1,   0,
+    19,  51,  2,   0,   51,  1,   0,
+    19,  51,  3,   0,   51,  1,   0,
+    19,  52,  2,   0,   52,  1,   0,
+    19,  52,  3,   0,   52,  1,   0,
+    19,  53,  2,   0,   53,  1,   0,
+    19,  54,  3,   0,   54,  1,   0,
+    19,  55,  2,   0,   55,  1,   0,
+    19,  56,  2,   0,   56,  1,   0,
+    19,  57,  2,   0,   57,  1,   0,
+    19,  58,  2,   0,   58,  1,   0,
+    19,  59,  2,   0,   59,  1,   0,
+    19,  60,  2,   0,   60,  1,   0,
+    19,  60,  3,   0,   60,  1,   0,
+    19,  61,  2,   0,   61,  1,   0,
+    19,  62,  2,   0,   62,  1,   0,
+    19,  63,  2,   0,   63,  1,   0,
+    19,  64,  2,   0,   64,  1,   0,
+    19,  65,  2,   0,   65,  1,   0,
+    19,  67,  2,   0,   67,  1,   0,
+    19,  68,  2,   0,   68,  1,   0,
+    19,  69,  2,   0,   69,  1,   0,
+    19,  70,  2,   0,   70,  1,   0,
+    19,  75,  2,   0,   75,  1,   0,
+    19,  76,  2,   0,   76,  1,   0,
+    19,  77,  2,   0,   77,  1,   0,
+    19,  80,  2,   0,   80,  1,   0,
+    19,  81,  2,   0,   81,  1,   0,
+    19,  83,  2,   0,   83,  1,   0,
+    19,  84,  2,   0,   84,  1,   0,
+    19,  85,  2,   0,   85,  1,   0,
+    19,  88,  2,   0,   88,  1,   0,
+    19,  89,  2,   0,   89,  1,   0,
+    19,  92,  2,   0,   92,  1,   0,
+    19,  102, 2,   0,   102, 1,   0,
+    19,  108, 2,   0,   108, 1,   0,
+    19,  140, 2,   0,   140, 1,   0,
+    19,  142, 2,   0,   142, 1,   0,
+    0
+};
+
 
 SWORD_NAMESPACE_END
 
