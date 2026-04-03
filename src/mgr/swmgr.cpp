@@ -744,32 +744,43 @@ void SWMgr::findConfig(char *configType, char **prefixPath, char **configPath, s
 }
 
 
-void SWMgr::loadConfigDir(const char *ipath)
+void SWMgr::loadConfigDir(const char *ipath, bool skipCache)
 {
 	SWBuf basePath = ipath;
 	if (!basePath.endsWith("/") && !basePath.endsWith("\\")) basePath += "/";
 
 	SWBuf newModFile;
+	newModFile = basePath + "modules-conf.cache";
+	skipCache = skipCache || !FileMgr::existsFile(newModFile.c_str());
 
-	std::vector<DirEntry> dirList = FileMgr::getDirList(ipath);
-	for (unsigned int i = 0; i < dirList.size(); ++i) {
-		//check whether it ends with .conf, if it doesn't skip it!
-		if (!dirList[i].name.endsWith(".conf")) {
-			continue;
-		}
+	if (skipCache) {
+		// assure any cache file is removed
+		FileMgr::removeFile(newModFile.c_str());
+	}
 
-		newModFile = basePath + dirList[i].name;
-		if (config) {
+	SWConfig *pathConfig = new SWConfig(newModFile);
+
+	if (skipCache) {
+		std::vector<DirEntry> dirList = FileMgr::getDirList(ipath);
+		for (unsigned int i = 0; i < dirList.size(); ++i) {
+			//check whether it ends with .conf, if it doesn't skip it!
+			if (!dirList[i].name.endsWith(".conf")) {
+				continue;
+			}
+
+			newModFile = basePath + dirList[i].name;
 			SWConfig tmpConfig(newModFile);
-			config->augment(tmpConfig);
+			pathConfig->augment(tmpConfig);
 		}
-		else	config = myconfig = new SWConfig(newModFile);
+
+		pathConfig->save();
 	}
 
-	if (!config) {	// if no .conf file exist yet, create a default
-		newModFile = basePath + "globals.conf";
-		config = myconfig = new SWConfig(newModFile);
+	if (config) {
+		config->augment(*pathConfig);
+		delete pathConfig;
 	}
+	else	config = myconfig = pathConfig;
 }
 
 

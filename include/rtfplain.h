@@ -1,9 +1,10 @@
-/******************************************************************************
+/***************************************************************************
  *
- * zipcomprs.h -	class ZipCompress: an SWCompress implemention which
- * 			uses zip compression
+ * rtfplain.h -	class RTFPlain: a RenderFilter to render plain text from
+ *		a very limited subset of RTF
+ * 		
  *
- * $Id$
+ * $Id: rtfplain.h 3786 2020-08-30 11:35:14Z scribe $
  *
  * Copyright 2000-2013 CrossWire Bible Society (http://www.crosswire.org)
  *	CrossWire Bible Society
@@ -21,28 +22,19 @@
  *
  */
 
-#ifndef ZIPCOMPRS_H
-#define ZIPCOMPRS_H
+#ifndef RTFPLAIN_H
+#define RTFPLAIN_H
 
-#include <swcomprs.h>
-
-#include <defs.h>
+#include <swfilter.h>
 
 SWORD_NAMESPACE_START
 
-class FileDesc;
-
-class SWDLLEXPORT ZipCompress : public SWCompress {
-
+/** this filter converts RTF text into plain text
+ */
+class SWDLLEXPORT RTFPlain : public SWFilter {
 public:
-	ZipCompress();
-	virtual ~ZipCompress();
-
-	virtual void encode(void);
-	virtual void decode(void);
-
-	static char unTarGZ(int fd, const char *destPath);
-	static char unZip(const char *sourceZipPath, const char *destPath);
+	RTFPlain();
+	virtual char processText(SWBuf &text, const SWKey *key = 0, const SWModule *module = 0);
 };
 
 SWORD_NAMESPACE_END
